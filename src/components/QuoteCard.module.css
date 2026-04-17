@@ -1,0 +1,138 @@
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  background: var(--bg2);
+  max-width: 320px;
+  width: 100%;
+}
+
+.header {
+  background: var(--forge);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerLabel {
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.headerNum {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.statusBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.pending { background: rgba(255,255,255,0.2); color: #fff; }
+.approved { background: rgba(255,255,255,0.2); color: #fff; }
+.rejected { background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.8); }
+
+.body {
+  padding: 12px 14px;
+}
+
+.lineItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  padding: 3px 0;
+}
+
+.lineLabel { color: var(--text2); }
+.lineAmount { font-weight: 500; color: var(--text); }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notes {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.btnReject {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text2);
+}
+.btnReject:hover { background: var(--bg4); }
+
+.btnApprove {
+  flex: 2;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--forge);
+  color: #fff;
+  border: none;
+}
+.btnApprove:hover { background: var(--forge2); }
+
+.repActions {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.awaitingText {
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+.approvedBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--forge-border);
+  background: var(--forge-bg);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--forge3);
+}
