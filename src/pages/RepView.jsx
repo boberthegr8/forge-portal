@@ -1,28 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore.js'
 import Thread from '../components/Thread.jsx'
 import ComposeBar from '../components/ComposeBar.jsx'
-import QuoteCard from '../components/QuoteCard.jsx'
 import { initials, avatarColor, fmt$, portalUrl, copyToClipboard, timeAgo } from '../utils.js'
 import styles from './RepView.module.css'
 
-// ── SEND QUOTE MODAL ───────────────────────────────────────────
 function SendQuoteModal({ project, onClose, onSend }) {
-  const [number, setNumber]   = useState('Q-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100))
-  const [items, setItems]     = useState([{ label: '', amount: '' }])
-  const [notes, setNotes]     = useState('30-day payment terms.')
+  const [number, setNumber] = useState('Q-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100))
+  const [items, setItems]   = useState([{ label: '', amount: '' }])
+  const [notes, setNotes]   = useState('30-day payment terms.')
 
   const addLine = () => setItems(v => [...v, { label: '', amount: '' }])
   const removeLine = (i) => setItems(v => v.filter((_, idx) => idx !== i))
-  const updateLine = (i, field, val) =>
-    setItems(v => v.map((it, idx) => idx === i ? { ...it, [field]: val } : it))
-
+  const updateLine = (i, field, val) => setItems(v => v.map((it, idx) => idx === i ? { ...it, [field]: val } : it))
   const total = items.reduce((s, li) => s + (parseFloat(li.amount) || 0), 0)
 
   const handleSend = () => {
-    const lineItems = items
-      .filter(li => li.label && li.amount)
-      .map(li => ({ label: li.label, amount: parseFloat(li.amount) }))
+    const lineItems = items.filter(li => li.label && li.amount).map(li => ({ label: li.label, amount: parseFloat(li.amount) }))
     if (!lineItems.length) return
     onSend({ number, lineItems, notes })
     onClose()
@@ -35,51 +29,28 @@ function SendQuoteModal({ project, onClose, onSend }) {
           <div className={styles.modalTitle}>Send quote</div>
           <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
-
         <div className={styles.modalBody}>
           <div className={styles.fieldRow}>
             <label className={styles.label}>Quote number</label>
             <input className={styles.input} value={number} onChange={e => setNumber(e.target.value)} />
           </div>
-
           <div className={styles.fieldRow}>
             <label className={styles.label}>Line items</label>
             {items.map((li, i) => (
               <div key={i} className={styles.lineRow}>
-                <input
-                  className={styles.input}
-                  placeholder="Description"
-                  value={li.label}
-                  onChange={e => updateLine(i, 'label', e.target.value)}
-                  style={{ flex: 2 }}
-                />
-                <input
-                  className={styles.input}
-                  placeholder="0.00"
-                  type="number"
-                  value={li.amount}
-                  onChange={e => updateLine(i, 'amount', e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                {items.length > 1 && (
-                  <button className={styles.removeBtn} onClick={() => removeLine(i)}>×</button>
-                )}
+                <input className={styles.input} placeholder="Description" value={li.label} onChange={e => updateLine(i, 'label', e.target.value)} style={{ flex: 2 }} />
+                <input className={styles.input} placeholder="0.00" type="number" value={li.amount} onChange={e => updateLine(i, 'amount', e.target.value)} style={{ flex: 1 }} />
+                {items.length > 1 && <button className={styles.removeBtn} onClick={() => removeLine(i)}>×</button>}
               </div>
             ))}
             <button className={styles.addLineBtn} onClick={addLine}>+ Add line</button>
           </div>
-
-          <div className={styles.totalPreview}>
-            <span>Total</span>
-            <span>{fmt$(total)}</span>
-          </div>
-
+          <div className={styles.totalPreview}><span>Total</span><span>{fmt$(total)}</span></div>
           <div className={styles.fieldRow}>
             <label className={styles.label}>Notes / terms</label>
             <textarea className={styles.textarea} value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
-
         <div className={styles.modalFooter}>
           <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleSend}>Send to client</button>
@@ -89,17 +60,18 @@ function SendQuoteModal({ project, onClose, onSend }) {
   )
 }
 
-// ── NEW PROJECT MODAL ─────────────────────────────────────────
 function NewProjectModal({ onClose, onCreate }) {
   const [form, setForm] = useState({
     clientName: '', clientEmail: '', projectName: '',
-    projectDesc: '', repName: 'Rob Flagg', repCompany: 'Forge Building Group'
+    projectDesc: '', repName: 'Rob Flagg', repCompany: 'Forge Building Group', openingMessage: '',
   })
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const firstName = form.clientName.split(' ')[0] || 'there'
+  const preview = form.openingMessage || `Hi ${firstName} — ${form.repName || 'Rob'} here from ${form.repCompany || 'Forge'}. I've set up your project portal${form.projectName ? ` for ${form.projectName}` : ''}. You can send me plans, photos, or questions right here and I'll get back to you same day.`
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.clientName || !form.projectName) return
-    onCreate(form)
+    await onCreate(form)
     onClose()
   }
 
@@ -114,20 +86,20 @@ function NewProjectModal({ onClose, onCreate }) {
           <div className={styles.fieldRow2}>
             <div className={styles.fieldRow}>
               <label className={styles.label}>Client name</label>
-              <input className={styles.input} placeholder="Sarah Johnson" value={form.clientName} onChange={e => set('clientName', e.target.value)} />
+              <input className={styles.input} placeholder="Wayne Young" value={form.clientName} onChange={e => set('clientName', e.target.value)} />
             </div>
             <div className={styles.fieldRow}>
               <label className={styles.label}>Client email</label>
-              <input className={styles.input} placeholder="sarah@example.com" type="email" value={form.clientEmail} onChange={e => set('clientEmail', e.target.value)} />
+              <input className={styles.input} placeholder="wayne@example.com" type="email" value={form.clientEmail} onChange={e => set('clientEmail', e.target.value)} />
             </div>
           </div>
           <div className={styles.fieldRow}>
             <label className={styles.label}>Project name</label>
-            <input className={styles.input} placeholder="Johnson Residence" value={form.projectName} onChange={e => set('projectName', e.target.value)} />
+            <input className={styles.input} placeholder="Young Residence" value={form.projectName} onChange={e => set('projectName', e.target.value)} />
           </div>
           <div className={styles.fieldRow}>
-            <label className={styles.label}>Description</label>
-            <input className={styles.input} placeholder="1,840 sq ft bungalow — truss package" value={form.projectDesc} onChange={e => set('projectDesc', e.target.value)} />
+            <label className={styles.label}>Description <span style={{color:'var(--admin-text3)',fontWeight:400,textTransform:'none',letterSpacing:0}}>(optional)</span></label>
+            <input className={styles.input} placeholder="e.g. 2,200 sq ft — truss package" value={form.projectDesc} onChange={e => set('projectDesc', e.target.value)} />
           </div>
           <div className={styles.fieldRow2}>
             <div className={styles.fieldRow}>
@@ -139,37 +111,66 @@ function NewProjectModal({ onClose, onCreate }) {
               <input className={styles.input} value={form.repCompany} onChange={e => set('repCompany', e.target.value)} />
             </div>
           </div>
+          <div className={styles.fieldRow}>
+            <label className={styles.label}>Opening message <span style={{color:'var(--admin-text3)',fontWeight:400,textTransform:'none',letterSpacing:0}}>(optional)</span></label>
+            <textarea className={styles.textarea} rows={3} placeholder={preview} value={form.openingMessage} onChange={e => set('openingMessage', e.target.value)} />
+            {!form.openingMessage && <div style={{fontSize:11,color:'var(--admin-text3)',marginTop:4,lineHeight:1.4}}>Preview: {preview}</div>}
+          </div>
         </div>
         <div className={styles.modalFooter}>
           <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
-          <button className={styles.btnPrimary} onClick={handleCreate}>Create portal</button>
+          <button className={styles.btnPrimary} onClick={handleCreate} disabled={!form.clientName || !form.projectName} style={{opacity:(!form.clientName||!form.projectName)?0.5:1}}>
+            Create portal
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-// ── MAIN REP VIEW ─────────────────────────────────────────────
 export default function RepView() {
-  const [selectedId, setSelectedId]     = useState(1)
+  const [selectedId, setSelectedId]   = useState(null)
   const [showQuoteModal, setQuoteModal] = useState(false)
-  const [showNewModal, setNewModal]     = useState(false)
-  const [copied, setCopied]             = useState(false)
+  const [showNewModal, setNewModal]   = useState(false)
+  const [copied, setCopied]           = useState(false)
 
-  const projects        = useStore(s => s.projects)
-  const getMessages     = useStore(s => s.getMessages)
-  const sendMessage     = useStore(s => s.sendMessage)
-  const createProject   = useStore(s => s.createProject)
-  const createQuote     = useStore(s => s.createQuote)
-  const getQuote        = useStore(s => s.getQuote)
-  const getUnreadCount  = useStore(s => s.getUnreadCount)
-  const togglePortal    = useStore(s => s.togglePortal)
-  const approveQuote    = useStore(s => s.approveQuote)
-  const rejectQuote     = useStore(s => s.rejectQuote)
+  const projects         = useStore(s => s.projects)
+  const fetchProjects    = useStore(s => s.fetchProjects)
+  const fetchMessages    = useStore(s => s.fetchMessages)
+  const fetchQuotes      = useStore(s => s.fetchQuotes)
+  const getMessages      = useStore(s => s.getMessages)
+  const sendMessage      = useStore(s => s.sendMessage)
+  const createProject    = useStore(s => s.createProject)
+  const createQuote      = useStore(s => s.createQuote)
+  const getQuote         = useStore(s => s.getQuote)
+  const getUnreadCount   = useStore(s => s.getUnreadCount)
+  const togglePortal     = useStore(s => s.togglePortal)
+  const approveQuote     = useStore(s => s.approveQuote)
+  const rejectQuote      = useStore(s => s.rejectQuote)
   const markMessagesRead = useStore(s => s.markMessagesRead)
+  const subscribeToProject = useStore(s => s.subscribeToProject)
 
   const project  = projects.find(p => p.id === selectedId)
   const messages = project ? getMessages(project.id) : []
+
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  // Auto-select first project
+  useEffect(() => {
+    if (projects.length > 0 && !selectedId) {
+      handleSelectProject(projects[0].id)
+    }
+  }, [projects])
+
+  useEffect(() => {
+    if (!selectedId) return
+    fetchMessages(selectedId)
+    fetchQuotes(selectedId)
+    const unsub = subscribeToProject(selectedId)
+    return unsub
+  }, [selectedId])
 
   const handleSelectProject = (id) => {
     setSelectedId(id)
@@ -184,18 +185,13 @@ export default function RepView() {
   const handleAttach = (type) => {
     if (!project) return
     const fileName = type === 'photo' ? 'photo_' + Date.now() + '.jpg' : 'plan_' + Date.now() + '.pdf'
-    sendMessage({
-      projectId: project.id, sender: 'rep',
-      type: type === 'photo' ? 'photo' : 'file',
-      fileName, fileSize: '2.1 MB',
-      fileType: type === 'photo' ? 'image' : 'pdf',
-    })
+    sendMessage({ projectId: project.id, sender: 'rep', type: type === 'photo' ? 'photo' : 'file', fileName, fileSize: '2.1 MB', fileType: type === 'photo' ? 'image' : 'pdf' })
   }
 
-  const handleSendQuote = ({ number, lineItems, notes }) => {
+  const handleSendQuote = async ({ number, lineItems, notes }) => {
     if (!project) return
-    const quote = createQuote({ projectId: project.id, number, lineItems, notes })
-    sendMessage({ projectId: project.id, sender: 'rep', type: 'quote', quoteId: quote.id })
+    const quote = await createQuote({ projectId: project.id, number, lineItems, notes })
+    if (quote) sendMessage({ projectId: project.id, sender: 'rep', type: 'quote', quoteId: quote.id })
   }
 
   const handleCopyLink = async () => {
@@ -205,19 +201,17 @@ export default function RepView() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleCreateProject = (form) => {
-    const p = createProject(form)
-    setSelectedId(p.id)
+  const handleCreateProject = async (form) => {
+    const p = await createProject(form)
+    if (p) setSelectedId(p.id)
   }
 
-  // Approval notification check
-  const approvalPending = project?.activeQuoteId
-    ? (() => { const q = getQuote(project.activeQuoteId); return q?.status === 'approved' })()
+  const approvalPending = project?.active_quote_id
+    ? (() => { const q = getQuote(project.active_quote_id); return q?.status === 'approved' })()
     : false
 
   return (
     <div className={styles.shell}>
-      {/* ── TOP BAR ── */}
       <div className={styles.topbar}>
         <div className={styles.logo}>
           <div className={styles.logoMark}>
@@ -227,45 +221,38 @@ export default function RepView() {
           </div>
           <span className={styles.logoText}>Forge <span>Portal</span></span>
         </div>
-        <button className={styles.newBtn} onClick={() => setNewModal(true)}>
-          + New portal
-        </button>
+        <button className={styles.newBtn} onClick={() => setNewModal(true)}>+ New portal</button>
       </div>
 
       <div className={styles.layout}>
-        {/* ── LEFT: PROJECT LIST ── */}
         <div className={styles.sidebar}>
           <div className={styles.sidebarHeader}>
             <span>Projects</span>
             <span className={styles.projectCount}>{projects.length}</span>
           </div>
-
           <div className={styles.projectList}>
+            {projects.length === 0 && (
+              <div style={{padding:'24px 16px',textAlign:'center',color:'var(--admin-text3)',fontSize:13}}>
+                No projects yet — create one to get started
+              </div>
+            )}
             {projects.map(p => {
               const unread = getUnreadCount(p.id, 'client')
               const msgs   = getMessages(p.id)
               const last   = msgs[msgs.length - 1]
-              const isSelected = p.id === selectedId
-
               return (
-                <div
-                  key={p.id}
-                  className={`${styles.projectItem} ${isSelected ? styles.projectItemActive : ''}`}
-                  onClick={() => handleSelectProject(p.id)}
-                >
-                  <div className={styles.projectAvatar} style={{ background: avatarColor(p.clientName) }}>
-                    {initials(p.clientName)}
+                <div key={p.id} className={`${styles.projectItem} ${p.id === selectedId ? styles.projectItemActive : ''}`} onClick={() => handleSelectProject(p.id)}>
+                  <div className={styles.projectAvatar} style={{ background: avatarColor(p.client_name) }}>
+                    {initials(p.client_name)}
                   </div>
                   <div className={styles.projectMeta}>
                     <div className={styles.projectItemTop}>
-                      <span className={styles.projectClientName}>{p.clientName}</span>
-                      {last && <span className={styles.projectTime}>{timeAgo(last.ts)}</span>}
+                      <span className={styles.projectClientName}>{p.client_name}</span>
+                      {last && <span className={styles.projectTime}>{timeAgo(new Date(last.created_at).getTime())}</span>}
                     </div>
                     <div className={styles.projectItemBottom}>
-                      <span className={styles.projectNameSub}>{p.projectName}</span>
-                      {unread > 0 && (
-                        <span className={styles.unreadBadge}>{unread}</span>
-                      )}
+                      <span className={styles.projectNameSub}>{p.project_name}</span>
+                      {unread > 0 && <span className={styles.unreadBadge}>{unread}</span>}
                     </div>
                   </div>
                 </div>
@@ -274,76 +261,42 @@ export default function RepView() {
           </div>
         </div>
 
-        {/* ── RIGHT: THREAD PANEL ── */}
         {project ? (
           <div className={styles.main}>
-            {/* Thread header */}
             <div className={styles.threadHeader}>
               <div className={styles.threadHeaderLeft}>
-                <div className={styles.threadAvatar} style={{ background: avatarColor(project.clientName) }}>
-                  {initials(project.clientName)}
+                <div className={styles.threadAvatar} style={{ background: avatarColor(project.client_name) }}>
+                  {initials(project.client_name)}
                 </div>
                 <div>
-                  <div className={styles.threadClientName}>{project.clientName}</div>
-                  <div className={styles.threadProjectName}>{project.projectName}</div>
+                  <div className={styles.threadClientName}>{project.client_name}</div>
+                  <div className={styles.threadProjectName}>{project.project_name}</div>
                 </div>
               </div>
               <div className={styles.threadHeaderActions}>
-                <button
-                  className={styles.actionBtn}
-                  onClick={handleCopyLink}
-                  title="Copy portal link"
-                >
+                <button className={styles.actionBtn} onClick={handleCopyLink}>
                   {copied ? (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="var(--forge)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 7.5l3.5 3.5 7-7"/>
-                    </svg>
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="var(--forge)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7.5l3.5 3.5 7-7"/></svg>
                   ) : (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="5" y="1" width="9" height="9" rx="2"/>
-                      <path d="M10 10v3a1 1 0 01-1 1H2a1 1 0 01-1-1V6a1 1 0 011-1h3"/>
-                    </svg>
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="1" width="9" height="9" rx="2"/><path d="M10 10v3a1 1 0 01-1 1H2a1 1 0 01-1-1V6a1 1 0 011-1h3"/></svg>
                   )}
                   <span>{copied ? 'Copied!' : 'Copy link'}</span>
                 </button>
-                <button
-                  className={`${styles.actionBtn} ${!project.portalEnabled ? styles.actionBtnDanger : ''}`}
-                  onClick={() => togglePortal(project.id)}
-                  title={project.portalEnabled ? 'Disable portal' : 'Enable portal'}
-                >
-                  {project.portalEnabled ? (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="4" width="9" height="8" rx="1.5"/>
-                      <path d="M10 7h2.5a1 1 0 011 1v4a1 1 0 01-1 1H10"/>
-                      <path d="M4 4V3a3 3 0 016 0v1"/>
-                    </svg>
-                  ) : (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="4" width="9" height="8" rx="1.5"/>
-                      <path d="M4 4V3a3 3 0 016 0v1"/>
-                      <line x1="2" y1="2" x2="13" y2="13"/>
-                    </svg>
-                  )}
-                  <span>{project.portalEnabled ? 'Portal on' : 'Portal off'}</span>
+                <button className={`${styles.actionBtn} ${!project.portal_enabled ? styles.actionBtnDanger : ''}`} onClick={() => togglePortal(project.id)}>
+                  <span>{project.portal_enabled ? 'Portal on' : 'Portal off'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Approval notification */}
             {approvalPending && (
               <div className={styles.approvalBanner}>
                 <div className={styles.approvalDot} />
-                <div className={styles.approvalText}>
-                  <strong>{project.clientName}</strong> approved the quote
-                </div>
-                <button className={styles.approvalBtn} onClick={() => approveQuote(project.activeQuoteId)}>
-                  Confirm
-                </button>
+                <div className={styles.approvalText}><strong>{project.client_name}</strong> approved the quote</div>
+                <button className={styles.approvalBtn} onClick={() => approveQuote(project.active_quote_id)}>Confirm</button>
               </div>
             )}
 
-            {/* Portal link card (shown when no messages yet) */}
-            {messages.length === 0 && (
+            {messages.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--forge)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -351,57 +304,29 @@ export default function RepView() {
                   </svg>
                 </div>
                 <div className={styles.emptyTitle}>Portal created</div>
-                <div className={styles.emptySub}>Share this link with {project.clientName} to get started</div>
+                <div className={styles.emptySub}>Share this link with {project.client_name} to get started</div>
                 <div className={styles.linkBox}>
                   <span className={styles.linkText}>{portalUrl(project.token)}</span>
-                  <button className={styles.copyLinkBtn} onClick={handleCopyLink}>
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
+                  <button className={styles.copyLinkBtn} onClick={handleCopyLink}>{copied ? 'Copied!' : 'Copy'}</button>
                 </div>
               </div>
+            ) : (
+              <Thread messages={messages} perspective="rep" onApproveQuote={approveQuote} onRejectQuote={rejectQuote} getQuote={getQuote} />
             )}
 
-            {/* Thread */}
-            {messages.length > 0 && (
-              <Thread
-                messages={messages}
-                perspective="rep"
-                onApproveQuote={approveQuote}
-                onRejectQuote={rejectQuote}
-                getQuote={getQuote}
-              />
-            )}
-
-            {/* Compose */}
-            <ComposeBar
-              onSend={handleSend}
-              onAttach={handleAttach}
-              onSendQuote={() => setQuoteModal(true)}
-              showQuoteBtn={true}
-              placeholder={`Message ${project.clientName}...`}
-            />
+            <ComposeBar onSend={handleSend} onAttach={handleAttach} onSendQuote={() => setQuoteModal(true)} showQuoteBtn={true} placeholder={`Message ${project.client_name}...`} />
           </div>
         ) : (
           <div className={styles.noSelection}>
-            <div className={styles.noSelectionText}>Select a project to view the thread</div>
+            <div className={styles.noSelectionText}>
+              {projects.length === 0 ? 'Create your first portal to get started' : 'Select a project to view the thread'}
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── MODALS ── */}
-      {showQuoteModal && (
-        <SendQuoteModal
-          project={project}
-          onClose={() => setQuoteModal(false)}
-          onSend={handleSendQuote}
-        />
-      )}
-      {showNewModal && (
-        <NewProjectModal
-          onClose={() => setNewModal(false)}
-          onCreate={handleCreateProject}
-        />
-      )}
+      {showQuoteModal && <SendQuoteModal project={project} onClose={() => setQuoteModal(false)} onSend={handleSendQuote} />}
+      {showNewModal && <NewProjectModal onClose={() => setNewModal(false)} onCreate={handleCreateProject} />}
     </div>
   )
 }

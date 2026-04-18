@@ -9,7 +9,7 @@ function groupByDate(messages) {
   const groups = []
   let lastDate = null
   messages.forEach(msg => {
-    const dateLabel = msgDateLabel(msg.ts)
+    const dateLabel = msgDateLabel(new Date(msg.created_at).getTime())
     if (dateLabel !== lastDate) {
       groups.push({ dateLabel, messages: [msg] })
       lastDate = dateLabel
@@ -56,7 +56,7 @@ export default function Thread({
                       {msg.text}
                     </div>
                     <div className={`${styles.time} ${isMe ? styles.timeRight : ''}`}>
-                      {msgTime(msg.ts)}
+                      {msgTime(new Date(msg.created_at).getTime())}
                       {isMe && (
                         <span className={styles.readTick} title={msg.read ? 'Read' : 'Delivered'}>
                           {msg.read ? '✓✓' : '✓'}
@@ -69,12 +69,12 @@ export default function Thread({
                 {msg.type === 'file' && (
                   <div className={styles.bubbleWrap}>
                     <FileBubble
-                      fileName={msg.fileName}
-                      fileSize={msg.fileSize}
-                      fileType={msg.fileType}
+                      fileName={msg.file_name}
+                      fileSize={msg.file_size}
+                      fileType={msg.file_type}
                     />
                     <div className={`${styles.time} ${isMe ? styles.timeRight : ''}`}>
-                      {msgTime(msg.ts)}
+                      {msgTime(new Date(msg.created_at).getTime())}
                     </div>
                   </div>
                 )}
@@ -87,16 +87,16 @@ export default function Thread({
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <path d="M21 15l-5-5L5 21"/>
                       </svg>
-                      <span>{msg.fileName}</span>
+                      <span>{msg.file_name}</span>
                     </div>
                     <div className={`${styles.time} ${isMe ? styles.timeRight : ''}`}>
-                      {msgTime(msg.ts)}
+                      {msgTime(new Date(msg.created_at).getTime())}
                     </div>
                   </div>
                 )}
 
                 {msg.type === 'quote' && (() => {
-                  const quote = getQuote(msg.quoteId)
+                  const quote = getQuote(msg.quote_id)
                   return (
                     <div className={styles.bubbleWrap}>
                       <QuoteCard
@@ -106,7 +106,7 @@ export default function Thread({
                         onReject={onRejectQuote}
                       />
                       <div className={`${styles.time} ${isMe ? styles.timeRight : ''}`}>
-                        {msgTime(msg.ts)}
+                        {msgTime(new Date(msg.created_at).getTime())}
                       </div>
                     </div>
                   )
