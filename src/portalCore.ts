@@ -4,7 +4,7 @@ const CORE_URL = 'https://uyqanhwurngoupmvzxrh.supabase.co';
 const CORE_PUBLISHABLE_KEY = 'sb_publishable_SquKrj848EoO9NHZknVkSA_k8CKD7WQ';
 
 export const forgeCore = createClient(CORE_URL, CORE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  auth: (window as any).ForgeSuite?.auth || { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   global: { headers: { 'x-forge-module': 'portal' } }
 });
 
@@ -86,6 +86,7 @@ export type PortalQuoteResponse = {
 };
 
 export async function getPortalSession(): Promise<Session | null> {
+  if ((window as any).ForgeSuite) await (window as any).ForgeSuite.connect(forgeCore);
   const { data, error } = await forgeCore.auth.getSession();
   if (error) throw error;
   return data.session;
@@ -94,7 +95,7 @@ export async function getPortalSession(): Promise<Session | null> {
 export async function sendPortalMagicLink(email: string) {
   const { error } = await forgeCore.auth.signInWithOtp({
     email: email.trim(),
-    options: { emailRedirectTo: window.location.origin }
+    options: { emailRedirectTo: 'https://app.forgehub.dev/account.html' }
   });
   if (error) throw error;
 }
