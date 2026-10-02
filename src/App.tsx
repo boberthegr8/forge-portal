@@ -112,7 +112,7 @@ export default function App() {
   if (loading && !signedIn) return <div className="screen-center"><div className="loader" /><span>Opening Forge Portal…</span></div>;
 
   if (!signedIn) return <div className="auth-shell">
-    <div className="auth-brand"><div className="brand-mark">F</div><div><strong>FORGE</strong><span>Customer Portal</span></div></div>
+    <a href="https://app.forgehub.dev/" aria-label="Back to Forge Home" title="Back to Forge Home" style={{color: 'inherit', textDecoration: 'none'}} className="auth-brand"><div className="brand-mark">F</div><div><strong>FORGE</strong><span>Customer Portal</span></div></a>
     <section className="auth-card">
       <div className="shield"><ShieldCheck size={28} /></div>
       <div className="eyebrow">Secure project access</div>
@@ -127,13 +127,13 @@ export default function App() {
   </div>;
 
   if (!loading && !dashboard.projects.length) return <div className="auth-shell">
-    <div className="auth-brand"><div className="brand-mark">F</div><div><strong>FORGE</strong><span>Customer Portal</span></div></div>
+    <a href="https://app.forgehub.dev/" aria-label="Back to Forge Home" title="Back to Forge Home" style={{color: 'inherit', textDecoration: 'none'}} className="auth-brand"><div className="brand-mark">F</div><div><strong>FORGE</strong><span>Customer Portal</span></div></a>
     <section className="auth-card empty-access"><div className="shield"><ShieldCheck size={28} /></div><div className="eyebrow">Signed in securely</div><h1>No projects shared yet.</h1><p>Your Forge Core account is active, but no customer or project access has been assigned to <strong>{sessionEmail}</strong>.</p><p>Contact your sales representative and ask them to share the project with this email address.</p><button className="secondary full" onClick={() => void logout()} disabled={busy}><LogOut size={15} />Sign out</button></section>
   </div>;
 
   return <div className="portal-shell">
     <aside className="sidebar">
-      <div className="portal-brand"><div className="brand-mark small">F</div><div><strong>FORGE</strong><span>Portal</span></div></div>
+      <a href="https://app.forgehub.dev/" aria-label="Back to Forge Home" title="Back to Forge Home" style={{color: 'inherit', textDecoration: 'none'}} className="portal-brand"><div className="brand-mark small">F</div><div><strong>FORGE</strong><span>Portal</span></div></a>
       <div className="nav-label">Shared projects</div>
       <div className="project-nav">{dashboard.projects.map(project => <button key={project.id} className={selected?.id === project.id ? 'project-link active' : 'project-link'} onClick={() => { setSelectedId(project.id); setTab('overview'); }}><div><strong>{project.name || 'Untitled project'}</strong><span>{project.project_number || project.customer_name || 'Project'}</span></div><ChevronRight size={15} /></button>)}</div>
       <div className="sidebar-footer"><div><ShieldCheck size={14} /><span>Secured by Forge Core</span></div><small>{sessionEmail}</small><button onClick={() => void logout()} disabled={busy}><LogOut size={14} />Sign out</button></div>
