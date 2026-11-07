@@ -10,8 +10,9 @@ import {
   submitPortalQuoteResponse, type PortalDashboard, type PortalDocument,
   type PortalProject, type PortalQuote, type PortalQuoteResponse
 } from './portalCore';
+import { ModelView } from './ModelView';
 
-type Tab = 'overview' | 'quotes' | 'documents' | 'deliveries';
+type Tab = 'model' | 'overview' | 'quotes' | 'documents' | 'deliveries';
 type ResponseChoice = PortalQuoteResponse['response'];
 
 const money = (value?: number, currency = 'CAD') => new Intl.NumberFormat('en-CA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(value || 0));
@@ -47,7 +48,10 @@ export default function App() {
     try {
       const next = await loadPortalDashboard();
       setDashboard(next);
-      setSelectedId(current => next.projects.some(project => project.id === current) ? current : next.projects[0]?.id || '');
+      const wanted = new URLSearchParams(location.search).get('p');
+      setSelectedId(current => next.projects.some(project => project.id === current) ? current : (wanted && next.projects.some(project => project.id === wanted) ? wanted : next.projects[0]?.id || ''));
+      const first = next.projects.find(project => project.id === wanted) || next.projects[0];
+      if (first?.portal?.model) setTab('model');
     } catch (err: any) {
       setError(err?.message || 'Could not load your Forge Portal.');
     } finally { setLoading(false); }
@@ -135,7 +139,7 @@ export default function App() {
     <aside className="sidebar">
       <a href="https://app.forgehub.dev/" aria-label="Back to Forge Home" title="Back to Forge Home" style={{color: 'inherit', textDecoration: 'none'}} className="portal-brand"><div className="brand-mark small">F</div><div><strong>FORGE</strong><span>Portal</span></div></a>
       <div className="nav-label">Shared projects</div>
-      <div className="project-nav">{dashboard.projects.map(project => <button key={project.id} className={selected?.id === project.id ? 'project-link active' : 'project-link'} onClick={() => { setSelectedId(project.id); setTab('overview'); }}><div><strong>{project.name || 'Untitled project'}</strong><span>{project.project_number || project.customer_name || 'Project'}</span></div><ChevronRight size={15} /></button>)}</div>
+      <div className="project-nav">{dashboard.projects.map(project => <button key={project.id} className={selected?.id === project.id ? 'project-link active' : 'project-link'} onClick={() => { setSelectedId(project.id); setTab(project.portal?.model ? 'model' : 'overview'); }}><div><strong>{project.name || 'Untitled project'}</strong><span>{project.portal?.model ? '3D · ' : ''}{project.staff_preview ? 'Staff preview · ' : ''}{project.project_number || project.customer_name || 'Project'}</span></div><ChevronRight size={15} /></button>)}</div>
       <div className="sidebar-footer"><div><ShieldCheck size={14} /><span>Secured by Forge Core</span></div><small>{sessionEmail}</small><button onClick={() => void logout()} disabled={busy}><LogOut size={14} />Sign out</button></div>
     </aside>
 
@@ -154,14 +158,17 @@ export default function App() {
 
 function PortalProjectView({ project, tab, setTab, latestResponses, onDownload, onRespond }: { project: PortalProject; tab: Tab; setTab: (tab: Tab) => void; latestResponses: Map<string, PortalQuoteResponse>; onDownload: (doc: PortalDocument) => void; onRespond: (quote: PortalQuote) => void }) {
   const nextDelivery = project.deliveries.filter(item => item.scheduled_start && new Date(item.scheduled_start) >= new Date()).sort((a,b) => String(a.scheduled_start).localeCompare(String(b.scheduled_start)))[0];
+  const tabs: Tab[] = project.portal?.model ? ['model','overview','quotes','documents','deliveries'] : ['overview','quotes','documents','deliveries'];
   return <>
+    {project.staff_preview && <div className="preview-banner"><ShieldCheck size={14} />Staff preview — your customer only sees this once you share the project with their email on the <a href={`https://scope.forgehub.dev/job.html?p=${project.id}`} target="_blank" rel="noreferrer">job page</a>.</div>}
     <section className="summary-grid">
       <div className="summary"><span><CircleDollarSign size={15} />Quotes</span><strong>{project.quotes.length}</strong><small>{project.permissions.approve ? 'Response access enabled' : 'View only'}</small></div>
       <div className="summary"><span><FileText size={15} />Documents</span><strong>{project.documents.length}</strong><small>Shared project files</small></div>
       <div className="summary"><span><Truck size={15} />Deliveries</span><strong>{project.deliveries.length}</strong><small>{nextDelivery ? dateTime(nextDelivery.scheduled_start) : 'No upcoming delivery'}</small></div>
       <div className="summary"><span><Building2 size={15} />Status</span><strong className="status-text">{label(project.status)}</strong><small>{addressText(project.address) || 'Project record'}</small></div>
     </section>
-    <nav className="tabs">{(['overview','quotes','documents','deliveries'] as Tab[]).map(item => <button className={tab === item ? 'active' : ''} key={item} onClick={() => setTab(item)}>{label(item)}</button>)}</nav>
+    <nav className="tabs">{tabs.map(item => <button className={tab === item ? 'active' : ''} key={item} onClick={() => setTab(item)}>{item === 'model' ? '3D Model' : label(item)}</button>)}</nav>
+    {tab === 'model' && project.portal?.model && <ModelView key={project.id} portal={project.portal} projectName={project.name} />}
     {tab === 'overview' && <Overview project={project} nextDelivery={nextDelivery} />}
     {tab === 'quotes' && <Quotes project={project} responses={latestResponses} onRespond={onRespond} />}
     {tab === 'documents' && <Documents project={project} onDownload={onDownload} />}

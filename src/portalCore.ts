@@ -66,10 +66,13 @@ export type PortalProject = {
   quotes: PortalQuote[];
   deliveries: PortalDelivery[];
   documents: PortalDocument[];
+  staff_preview?: boolean;
+  portal?: import('./ModelView').PortalPublish | null;
 };
 
 export type PortalDashboard = {
   user_id?: string;
+  staff?: boolean;
   grants: Array<Record<string, unknown>>;
   projects: PortalProject[];
 };
@@ -109,7 +112,7 @@ export async function loadPortalDashboard(): Promise<PortalDashboard> {
   const { data, error } = await forgeCore.rpc('portal_dashboard_v1');
   if (error) throw error;
   const value = (data || {}) as PortalDashboard;
-  return { grants: value.grants || [], projects: value.projects || [], user_id: value.user_id };
+  return { grants: value.grants || [], projects: value.projects || [], user_id: value.user_id, staff: value.staff };
 }
 
 export async function loadPortalQuoteResponses(projectId: string): Promise<PortalQuoteResponse[]> {
